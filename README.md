@@ -14,20 +14,30 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 
 ## Project Structure
 ```
-api-latency-monitor/
-├── main.py                # Main application script for polling APIs and exposing metrics
-├── storage.py             # Module for storing latency data
-├── requirements.txt       # Python dependencies
-├── deploy/                # Kubernetes manifests and Helm chart configurations
-│   ├── deployment.yaml    # Kubernetes Deployment for the application
-│   ├── service.yaml       # Kubernetes Service for the application
-│   ├── configmap.yaml     # Environment variables for API endpoints and poll interval
-│   ├── secrets.yaml       # Kubernetes Secrets for API tokens
-│   ├── prometheus.yaml    # Prometheus configuration (optional if using Helm)
-│   └── grafana.yaml       # Grafana configuration (optional if using Helm)
-├── charts/                # Helm charts for Prometheus and Grafana (if used)
-├── Dockerfile             # Dockerfile for building the application image
-└── README.md              # Project documentation
+.
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── deploy
+│   ├── alertmanager.yaml
+│   ├── ansible_quickstart
+│   │   └── inventory.ini
+│   ├── configmap.yaml
+│   ├── deployment.yaml
+│   ├── grafana.yaml
+│   ├── infra.yaml
+│   ├── prometheus
+│   │   └── alert-rules.yaml
+│   ├── prometheus.yaml
+│   ├── secret.yaml
+│   └── service.yaml
+└── src
+    ├── app.py
+    ├── poller.py
+    ├── requirements.txt
+    ├── storage.py
+    └── tests
+        └── test_poller.py
 ```
 
 ## Deployment
