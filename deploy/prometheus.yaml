@@ -107,8 +107,8 @@ spec:
         - name: rules
           configMap:
             name: prometheus-alert-rules
-        # - name: data
-        #   emptyDir: {}
+        - name: data
+          emptyDir: {}
 
 ---
 apiVersion: v1
