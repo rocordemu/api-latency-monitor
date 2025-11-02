@@ -1,0 +1,33 @@
+# kubectl apply -f deploy/prometheus/alert-rules.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  namespace: monitoring-project
+  labels:
+    app: prometheus
+data:
+  high-latency.rules.yml: |
+    groups:
+      - name: api-latency-alerts
+        rules:
+          - alert: HighLatencyP95
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="api-latency-monitor"}[5m])) by (app)) > 1
+            for: 2m
+            labels:
+              severity: critical
+              team: sre
+            annotations:
+              summary: "High 95th percentile latency for {{ $labels.app }}"
+              description: "{{ $labels.app }} has 95th percentile latency of {{ $value | humanizeDuration }} for the last 2 minutes."
+              runbook_url: "https://your-runbook.example.com/high-latency"
+
+          - alert: HighErrorRate
+            expr: 100 * rate(http_request_duration_seconds_count{job="api-latency-monitor",status=~\"5..\"}[5m]) / rate(http_request_duration_seconds_count{job="api-latency-monitor"}[5m]) > 5
+            for: 1m
+            labels:
+              severity: warning
+              team: sre
+            annotations:
+              summary: "High error rate for {{ $labels.app }}"
+              description: "{{ $labels.app }} has error rate of {{ $value | printf \"%.2f\" }}% (5xx responses)."

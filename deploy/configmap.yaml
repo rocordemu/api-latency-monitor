@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-latency-monitor-config
+data:
+  POLL_INTERVAL: "60"
+  API_URL_1: "https://app1.ibmcloud.com/appRunning"
+  API_URL_2: "https://app2.ibmcloud.com/appRunning"
+  API_URL_3: "https://app3.ibmcloud.com/appRunning"

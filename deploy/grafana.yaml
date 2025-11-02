@@ -1,0 +1,202 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring-project
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: monitoring-project
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-config-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: grafana-config-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+      volumes:
+        - name: grafana-config-datasources
+          configMap:
+            name: grafana-datasources-config
+        - name: grafana-config-dashboards
+          configMap:
+            name: grafana-dashboards-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring-project
+  labels:
+    app: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources-config
+  namespace: monitoring-project
+  labels:
+    app: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://api-latency-monitor-prometheus-service.monitoring-project.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: monitoring-project
+  labels:
+    app: grafana
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        options:
+          path: /etc/grafana/provisioning/dashboards
+  latency-dashboard.json: |
+    {
+      "id": null,
+      "uid": "api-latency-monitor",
+      "title": "API Latency Monitor",
+      "tags": ["sre", "latency"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "refresh": "15s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "95th Percentile Latency (seconds)",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"api-latency-monitor\"}[5m])) by (le, app))",
+              "legendFormat": "{{app}}",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            { "format": "s", "label": "Latency", "min": 0 },
+            { "format": "short" }
+          ],
+          "alert": {
+            "conditions": [
+              {
+                "evaluator": { "params": [1], "type": "gt" },
+                "operator": { "type": "and" },
+                "query": { "params": ["A", "5m", "now"] },
+                "reducer": { "params": [], "type": "avg" },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "alerting",
+            "frequency": "1m",
+            "handler": 1,
+            "name": "High Latency Alert",
+            "noDataState": "no_data",
+            "notifications": []
+          }
+        },
+        {
+          "type": "graph",
+          "title": "Request Rate (req/s)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 2,
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(http_request_duration_seconds_count{job=\"api-latency-monitor\"}[5m])",
+              "legendFormat": "{{app}}",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            { "format": "reqps", "label": "Requests/sec" },
+            { "format": "short" }
+          ]
+        },
+        {
+          "type": "graph",
+          "title": "Error Rate (%)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 3,
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "100 * rate(http_request_duration_seconds_count{job=\"api-latency-monitor\",status=~\"5..\"}[5m]) / rate(http_request_duration_seconds_count{job=\"api-latency-monitor\"}[5m])",
+              "legendFormat": "{{app}}",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            { "format": "percent", "label": "Error %" },
+            { "format": "short" }
+          ]
+        }
+      ],
+      "templating": {
+        "list": []
+      },
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(255, 96, 96, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "schemaVersion": 16,
+      "version": 1
+    }

@@ -1,0 +1,13 @@
+---
+- name: Apply Prometheus configuration and start service in Minikube
+  hosts: all
+  #become: yes  # Optional, if sudo permissions are required
+  tasks:
+    - name: Apply All configurations
+      command: kubectl apply -f ./
+
+    # - name: Apply Prometheus configuration
+    #   command: kubectl apply -f ./prometheus.yaml
+
+    # - name: Apply Prometheus Alert Rules
+    #   command: kubectl apply -f ./prometheus/alert-rules.yaml

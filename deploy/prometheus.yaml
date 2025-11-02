@@ -1,0 +1,128 @@
+# kubectl apply -f deploy/prometheus.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring-project
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-latency-monitor-prometheus-config
+  namespace: monitoring-project
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+    
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - alertmanager.monitoring-project.svc.cluster.local:9093
+
+    scrape_configs:
+      # 1. Scrape api-latency-monitor app
+      - job_name: 'api-latency-monitor'
+        static_configs:
+          - targets: ['api-latency-monitor.monitoring-project.svc.cluster.local:8000']
+        metrics_path: /metrics
+        scheme: http
+
+      # 2. Kubernetes cluster metrics (nodes, pods, etc.)
+      - job_name: 'kubernetes-nodes'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # 3. Scrape kubelet (cadvisor) for container metrics
+      - job_name: 'kubernetes-cadvisor'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: keep
+            regex: kubelet
+            source_labels: [__meta_kubernetes_node_label_kubernetes_io_role]
+          - source_labels: [__address__]
+            regex: (.+):10250
+            replacement: ${1}:10255
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-latency-monitor-prometheus-deployment
+  namespace: monitoring-project
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--enable-feature=remote-write-receiver"
+            - "--web.enable-lifecycle"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus/
+            - name: rules
+              mountPath: /etc/prometheus/rules
+            - name: data
+              mountPath: /prometheus
+      volumes:
+        - name: prometheus-config-volume
+          configMap:
+            name: api-latency-monitor-prometheus-config
+        - name: rules
+          configMap:
+            name: prometheus-alert-rules
+        # - name: data
+        #   emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-latency-monitor-prometheus-service
+  namespace: monitoring-project
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: NodePort
