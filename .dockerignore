@@ -1,0 +1,5 @@
+src/.env
+src/.venv
+src/status.db
+__pycache__/
+*.pyc
