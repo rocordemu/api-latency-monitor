@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: api-latency-monitor
-        image: your-docker-repo/api-latency-monitor:latest
+        image: rocordemu/api-latency-monitor:latest
         ports:
         - containerPort: 8000
         env:
