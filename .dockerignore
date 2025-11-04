@@ -4,3 +4,4 @@ src/status.db
 status.db
 __pycache__/
 *.pyc
+deploy/
