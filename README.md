@@ -6,7 +6,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 ![Architecture](docs/architecture.md)
 
 ## Setup
-1. Clone the repo: `git clone <repo-url>`
+1. Clone the repo: `git clone https://github.com/rocordemu/api-latency-monitor.git`
 2. (Optional) Create a virtual environment: `python -m venv src/.venv` and activate it (`source src/.venv/bin/activate` on Linux/Mac, `src\.venv\Scripts\activate` on Windows).
 3. Install dependencies: `pip install -r src/requirements.txt`
 4. Create `src/.env` from `src/.env.example` with your API token, URLs, and POLL_INTERVAL.
