@@ -45,7 +45,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 2. Build Docker image: `docker build -t your-docker-repo/api-latency-monitor:latest .`
    - Note: `.dockerignore` excludes `src/.env`, `src/.venv`, and other temporary files.
 3. Push image: `docker push your-docker-repo/api-latency-monitor:latest`
-4. Create Secret: `kubectl create secret generic api-token --from-literal=token=$(grep API_TOKEN src/.env | cut -d '=' -f2)`
+4. Create Secret: `kubectl create secret generic api-token --from-literal=token=$(grep API_TOKEN src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
 5. Apply manifests: `kubectl apply -f deploy/`
 6. Access service: `minikube service api-latency-monitor`
 
