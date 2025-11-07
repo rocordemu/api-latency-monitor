@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: api-latency-monitor-config
+  name: monitoring-project
 data:
   POLL_INTERVAL: "60"
-  API_URL_1: "https://app1.ibmcloud.com/appRunning"
-  API_URL_2: "https://app2.ibmcloud.com/appRunning"
-  API_URL_3: "https://app3.ibmcloud.com/appRunning"
+  API_URL_1: "https://mss-workforce.trxjg05qy7b.us-south.codeengine.appdomain.cloud/api_robot/appRunning"
+  API_URL_2: "https://mss-bruce-dispatcher-staging.trxjg05qy7b.us-south.codeengine.appdomain.cloud/api_robot/appRunning"
+  API_URL_3: "https://bruce-the-one.trxjg05qy7b.us-south.codeengine.appdomain.cloud/api_robot/appRunning"

@@ -1,4 +1,3 @@
-# kubectl apply -f deploy/alertmanager.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,7 +45,7 @@ spec:
   ports:
     - port: 9093
       targetPort: 9093
-  type: ClusterIP
+  type: NodePort
 
 ---
 apiVersion: v1

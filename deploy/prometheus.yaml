@@ -1,4 +1,3 @@
-# kubectl apply -f deploy/prometheus.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -89,7 +88,6 @@ spec:
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
-            - "--enable-feature=remote-write-receiver"
             - "--web.enable-lifecycle"
           ports:
             - containerPort: 9090
