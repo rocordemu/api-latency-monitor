@@ -1,8 +1,16 @@
 import sqlite3
 import time
+import os
+
+if os.path.exists("/.dockerenv") or os.getenv("KUBERNETES_SERVICE_HOST"):
+    DB_PATH = os.path.join("/app/data", "status.db")
+    os.makedirs("/app/data", exist_ok=True)
+else:
+    DB_PATH = "status.db"
+
 
 def init_db():
-    conn = sqlite3.connect("status.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS status (
@@ -17,7 +25,7 @@ def init_db():
     conn.close()
 
 def save_status(endpoint: str, status_code: int, latency: float):
-    conn = sqlite3.connect("status.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO status (endpoint, status_code, latency, timestamp) VALUES (?, ?, ?, ?)",
@@ -27,7 +35,7 @@ def save_status(endpoint: str, status_code: int, latency: float):
     conn.close()
 
 def get_latest_status():
-    conn = sqlite3.connect("status.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT endpoint, status_code, latency, timestamp
