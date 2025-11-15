@@ -1,8 +1,8 @@
 import pytest
 import sys
 
-sys.path.append("../src")
-from poller import poll_endpoints
+sys.path.append("src")
+from src.poller import poll_endpoints
 
 @pytest.mark.asyncio
 async def test_poll_endpoints():
@@ -11,4 +11,3 @@ async def test_poll_endpoints():
     assert endpoints[0] in results
     assert "status_code" in results[endpoints[0]]
     assert "latency" in results[endpoints[0]]
-
