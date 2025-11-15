@@ -1,5 +1,8 @@
 import pytest
-from poller import poll_endpoints
+import sys
+
+sys.path.append("../src")
+from src.poller import poll_endpoints
 
 @pytest.mark.asyncio
 async def test_poll_endpoints():
