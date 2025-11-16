@@ -46,7 +46,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
    - Note: `.dockerignore` excludes `src/.env`, `src/.venv`, and other temporary files.
 3. Push image: `docker push your-docker-repo/api-latency-monitor:latest`
 4. Create Secret: `kubectl create secret generic api-token --from-literal=token=$(grep API_TOKEN src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
-5. Create Secret: `kubectl create secret generic slack_webhook --from-literal=token=$(grep SLACK_WEBHOOK_URL src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
+5. Create Secret: `kubectl create secret generic slack-webhook --from-literal=token=$(grep SLACK_WEBHOOK_URL src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
 5. Apply manifests: `kubectl apply -f deploy/ -R`
 6. Access service: `minikube service api-latency-monitor -n monitoring-project`
 
