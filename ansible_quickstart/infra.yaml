@@ -14,6 +14,10 @@
       command: kubectl delete -n monitoring-project secret api-token
       ignore_errors: yes
     
+    - name: Delete slack-webhook secret if it exists
+      command: kubectl delete -n monitoring-project secret slack-webhook
+      ignore_errors: yes
+    
     - name: Wait for deletion to complete
       wait_for:
         timeout: 2
@@ -24,15 +28,20 @@
       args:
         executable: /bin/bash
       register: api_token_value
+    
+    - name: Read SLACK_WEBHOOK_URL from .env file
+      shell: |
+        grep SLACK_WEBHOOK_URL ../src/.env | cut -d '=' -f2 | tr -d ' \t\r\n'
+      args:
+        executable: /bin/bash
+      register: slack_webhook_value
 
     - name: Create api-token secret
       command: kubectl create secret generic api-token --from-literal=token={{api_token_value.stdout}} -n monitoring-project
-      # args:
-      #   chdir: ../
+    
+    - name: Create slack-webhook secret
+      command: kubectl create secret generic slack-webhook --from-literal=token={{slack_webhook_value.stdout}} -n monitoring-project
 
     - name: Display kubectl apply output
       debug:
         var: apply_result.stdout_lines
-
-    # - name: Apply Prometheus Alert Rules
-    #   command: kubectl apply -f ./prometheus/alert-rules.yaml
