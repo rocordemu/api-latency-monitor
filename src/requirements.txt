@@ -4,5 +4,5 @@ requests==2.32.3
 prometheus-client==0.21.0
 python-dotenv==1.0.1
 pytest==8.3.3
-pytest-asyncio>=1.2.0
+pytest-asyncio<=1.2.0
 # sqlite3  # Built-in with Python
