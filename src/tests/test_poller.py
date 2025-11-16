@@ -1,7 +1,7 @@
 import pytest
 import sys
 import os
-import asyncio
+import pytest-asyncio
 
 current_dir = os.path.dirname(__file__)
 print(current_dir)
