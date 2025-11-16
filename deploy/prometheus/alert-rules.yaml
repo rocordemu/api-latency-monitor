@@ -11,7 +11,7 @@ data:
       - name: api-latency-alerts
         rules:
           - alert: HighLatencyP95
-            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="api-latency-monitor"}[5m])) by (app)) > 1
+            expr: histogram_quantile(0.95, sum by(le) (rate(api_latency_seconds_bucket{job="api-latency-monitor"}[5m])))
             for: 2m
             labels:
               severity: critical
@@ -21,7 +21,7 @@ data:
               description: "{{ $labels.app }} has 95th percentile latency of {{ $value | humanizeDuration }}."
 
           - alert: HighErrorRate
-            expr: 100 * rate(http_request_duration_seconds_count{job="api-latency-monitor",status=~"5.."}[5m]) / rate(http_request_duration_seconds_count{job="api-latency-monitor"}[5m]) > 5
+            expr: 100 * rate(api_latency_seconds_count{job="api-latency-monitor",status=~"5.."}[5m]) / rate(api_latency_seconds_count{job="api-latency-monitor"}[5m]) > 5
             for: 1m
             labels:
               severity: warning

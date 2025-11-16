@@ -117,7 +117,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"api-latency-monitor\"}[5m])) by (le, app))",
+              "expr": "histogram_quantile(0.95, sum(rate(api_latency_seconds_bucket{job=\"api-latency-monitor\"}[5m])) by (le, app))",
               "legendFormat": "{{app}}",
               "refId": "A"
             }
@@ -152,7 +152,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "rate(http_request_duration_seconds_count{job=\"api-latency-monitor\"}[5m])",
+              "expr": "rate(api_latency_seconds_count{job=\"api-latency-monitor\"}[5m])",
               "legendFormat": "{{app}}",
               "refId": "A"
             }
@@ -170,7 +170,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "100 * rate(http_request_duration_seconds_count{job=\"api-latency-monitor\",status=~\"5..\"}[5m]) / rate(http_request_duration_seconds_count{job=\"api-latency-monitor\"}[5m])",
+              "expr": "100 * rate(api_latency_seconds_count{job=\"api-latency-monitor\",status=~\"5..\"}[5m]) / rate(api_latency_seconds_count{job=\"api-latency-monitor\"}[5m])",
               "legendFormat": "{{app}}",
               "refId": "A"
             }
