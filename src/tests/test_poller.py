@@ -1,8 +1,15 @@
 import pytest
 import sys
+import os
+import asyncio
 
-sys.path.append("src")
-from src.poller import poll_endpoints
+current_dir = os.path.dirname(__file__)
+print(current_dir)
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+print(parent_dir)
+sys.path.append(parent_dir)
+print(sys.path)
+from poller import poll_endpoints
 
 @pytest.mark.asyncio
 async def test_poll_endpoints():
