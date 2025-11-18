@@ -67,7 +67,7 @@ data:
     receivers:
       - name: slack
         slack_configs:
-          - api_url: {{ slack-webhook }}
+          - api_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
             channel: "#api-latency-monitor-alerts"
             send_resolved: true
             title: '{{ .CommonAnnotations.summary }}'
