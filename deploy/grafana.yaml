@@ -163,22 +163,139 @@ data:
           ]
         },
         {
-          "type": "graph",
-          "title": "Error Rate (%)",
+          "type": "gauge",
+          "title": "Uptime Rate (%)",
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
           "id": 3,
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "100 * rate(api_latency_seconds_count{job=\"api-latency-monitor\",status=~\"5..\"}[5m]) / rate(api_latency_seconds_count{job=\"api-latency-monitor\"}[5m])",
-              "legendFormat": "{{app}}",
+              "expr": "api_uptime_percent{job=\"api-latency-monitor\"}",
+              "legendFormat": "{{endpoint}}",
               "refId": "A"
             }
           ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "green",
+                    "value": 85
+                  }
+                ]
+              },
+              "fieldMinMax": false
+            },
+            "overrides": []
+          },
           "yaxes": [
             { "format": "percent", "label": "Error %" },
             { "format": "short" }
           ]
+        },
+        {
+          "type": "gauge",
+          "title": "Failure Requests (count)",
+          "gridPos": { "x": 0, "y": 16, "h": 8, "w": 12 },
+          "id": 4,
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "api_requests_total{status=\"failure\"}",
+              "legendFormat": "{{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "value": null,
+                    "color": "green"
+                  },
+                  {
+                    "value": 70,
+                    "color": "orange"
+                  },
+                  {
+                    "value": 85,
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "type": "bargauge",
+          "title": "Success Requests (count)",
+          "gridPos": { "x": 12, "y": 16, "h": 8, "w": 12 },
+          "id": 5,
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "api_requests_total{status=\"success\"}",
+              "legendFormat": "{{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "continuous-YlBl"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "orientation": "horizontal",
+            "legend": {
+              "showLegend": false,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            },
+            "displayMode": "basic",
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "showUnfilled": true,
+            "sizing": "auto",
+            "minVizWidth": 8,
+            "minVizHeight": 16,
+            "maxVizHeight": 300
+          }
         }
       ],
       "templating": {
