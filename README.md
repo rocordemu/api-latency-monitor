@@ -18,16 +18,18 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 ├── Dockerfile
 ├── LICENSE
 ├── README.md
+├── ansible_quickstart
+│   ├── infra.yaml
+│   └── inventory.ini
 ├── deploy
 │   ├── alertmanager.yaml
-│   ├── ansible_quickstart
-│   │   └── inventory.ini
+│   ├── cadvisor.yaml
 │   ├── configmap.yaml
 │   ├── deployment.yaml
 │   ├── grafana.yaml
-│   ├── infra.yaml
 │   ├── prometheus
 │   │   └── alert-rules.yaml
+│   ├── prometheus-rbac-cluster.yaml
 │   ├── prometheus.yaml
 │   ├── secret.yaml
 │   └── service.yaml
