@@ -6,12 +6,36 @@ from dotenv import load_dotenv
 import os
 import uvicorn
 import asyncio
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
+
+resource = Resource.create({"service.name": "api-latency-monitor"})
+
+span_exporter = OTLPSpanExporter(
+    endpoint="otel-collector.opentelemetry.svc.cluster.local:4317",  # Update with your OTEL Collector endpoint
+    insecure=True  # Set to True if using an unencrypted connection
+)
+
+tracer_provider = TracerProvider(resource=resource)
+span_processor = BatchSpanProcessor(span_exporter)
+tracer_provider.add_span_processor(span_processor)
+trace.set_tracer_provider(tracer_provider)
+
+tracer = trace.get_tracer(__name__)
 
 # Load environment variables
 load_dotenv()
 
 # FastAPI app
 app = FastAPI()
+FastAPIInstrumentor.instrument_app(app)
+app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
 
 # Prometheus metrics
 requests_total = Counter("api_requests_total", "Total API requests", ["endpoint", "status"])
@@ -46,16 +70,29 @@ async def get_status():
 
 async def poll_task():
     while True:
-        results = await poll_endpoints(ENDPOINTS, API_TOKEN)
-        for endpoint, result in results.items():
-            status = "success" if result["status_code"] == 200 else "failure"
-            requests_total.labels(endpoint=endpoint, status=status).inc()
-            latency_seconds.labels(endpoint=endpoint).observe(result["latency"])
-            uptime_percent.labels(endpoint=endpoint).set(100 if status == "success" else 0)
-            if result["latency"] > 1.0 or result["status_code"] >= 500:
-                print(f"Alert: {endpoint} - Latency: {result['latency']}s, Status: {result['status_code']}")
-            save_status(endpoint, result["status_code"], result["latency"])
-        await asyncio.sleep(POLL_INTERVAL)
+        with tracer.start_as_current_span("poll-task") as parent_span:
+            results = await poll_endpoints(ENDPOINTS, API_TOKEN)
+            parent_span.add_event("Polled endpoints")
+            for endpoint, result in results.items():
+                with tracer.start_as_current_span("analyze-endpoint") as span:
+                    span.add_event("Analyzing endpoint")
+                    span.set_attribute("endpoint", endpoint)
+                    span.set_attribute("status_code", result["status_code"])
+                    status = "success" if result["status_code"] == 200 else "failure"
+                    span.set_attribute("status", status)
+                    span.set_attribute("latency", result["latency"])
+                    requests_total.labels(endpoint=endpoint, status=status).inc()
+                    latency_seconds.labels(endpoint=endpoint).observe(result["latency"])
+                    uptime_percent.labels(endpoint=endpoint).set(100 if status == "success" else 0)
+                    if "error" in result:
+                        span.set_status(Status(StatusCode.ERROR, result["error"]))
+                        span.record_exception(Exception(result["error"]))
+                    if result["latency"] > 1.0 or result["status_code"] != 200:
+                        print(f"Alert: {endpoint} - Latency: {result['latency']}s, Status: {result['status_code']}")
+                    save_status(endpoint, result["status_code"], result["latency"])
+                    span.add_event("Saved status")
+            span.add_event("Sleeping until next poll")
+            await asyncio.sleep(POLL_INTERVAL)
 
 @app.on_event("startup")
 async def startup_event():
