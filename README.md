@@ -27,6 +27,8 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 │   ├── configmap.yaml
 │   ├── deployment.yaml
 │   ├── grafana.yaml
+│   ├── jaeger.yaml
+│   ├── otel-collector.yaml
 │   ├── prometheus
 │   │   └── alert-rules.yaml
 │   ├── prometheus-rbac-cluster.yaml
