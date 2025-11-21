@@ -58,6 +58,10 @@ POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "60"))  # Default to 60 seconds
 # Initialize database
 init_db()
 
+@app.route("/")
+def index():
+    return "API Latency Monitor is up and running!"
+
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
@@ -99,4 +103,5 @@ async def startup_event():
     asyncio.create_task(poll_task())
 
 if __name__ == "__main__":
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
