@@ -3,6 +3,22 @@
   hosts: all
   #become: yes  # Optional, if sudo permissions are required
   tasks:
+    
+
+    - name: Ensure log directory exists in Minikube
+      shell: |
+        sudo mkdir -p /data/api-latency-monitor/logs
+      args:
+        executable: /bin/bash
+      become: true
+
+    - name: Change permissions for log directory
+      shell: |
+        sudo chmod 777 /data/api-latency-monitor/logs
+      args:
+        executable: /bin/bash
+      become: true
+      
     - name: Apply All configurations
       command: kubectl apply -f . -R
       args:
