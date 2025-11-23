@@ -13,7 +13,16 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
+# from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
+
+import logging
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='./logs/api-latency-monitor-app.log', encoding='utf-8', level=logging.INFO)
 
 resource = Resource.create({"service.name": "api-latency-monitor"})
 
@@ -29,13 +38,31 @@ trace.set_tracer_provider(tracer_provider)
 
 tracer = trace.get_tracer(__name__)
 
+# Create and set the logger provider
+logger_provider = LoggerProvider()
+set_logger_provider(logger_provider)
+
+# Set up OTLP Log Exporter for logs
+log_exporter = OTLPLogExporter(
+    endpoint="otel-collector.opentelemetry.svc.cluster.local:4317",  # Update with your OTEL Collector endpoint
+    insecure=True
+)
+
+# Set up log emitter provider and processor
+log_processor = BatchLogRecordProcessor(log_exporter)
+logger_provider.add_log_record_processor(log_processor)
+
+# Set up logging to forward to OpenTelemetry Collector
+otel_handler = LoggingHandler(logger_provider=logger_provider)
+logging.getLogger().addHandler(otel_handler)
+
 # Load environment variables
 load_dotenv()
 
 # FastAPI app
 app = FastAPI()
 FastAPIInstrumentor.instrument_app(app)
-app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
+# app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
 
 # Prometheus metrics
 requests_total = Counter("api_requests_total", "Total API requests", ["endpoint", "status"])
@@ -58,10 +85,6 @@ POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "60"))  # Default to 60 seconds
 # Initialize database
 init_db()
 
-@app.route("/")
-def index():
-    return "API Latency Monitor is up and running!"
-
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
@@ -77,6 +100,7 @@ async def poll_task():
         with tracer.start_as_current_span("poll-task") as parent_span:
             results = await poll_endpoints(ENDPOINTS, API_TOKEN)
             parent_span.add_event("Polled endpoints")
+            logger.info("Polled endpoints: %s", results)
             for endpoint, result in results.items():
                 with tracer.start_as_current_span("analyze-endpoint") as span:
                     span.add_event("Analyzing endpoint")
@@ -91,8 +115,11 @@ async def poll_task():
                     if "error" in result:
                         span.set_status(Status(StatusCode.ERROR, result["error"]))
                         span.record_exception(Exception(result["error"]))
+                        logger.error("Error polling %s: %s", endpoint, result["error"])
                     if result["latency"] > 1.0 or result["status_code"] != 200:
-                        print(f"Alert: {endpoint} - Latency: {result['latency']}s, Status: {result['status_code']}")
+                        logger.warning("Endpoint %s is unhealthy: Latency %s, Status %s", endpoint, result["latency"], result["status_code"])
+                    else:
+                        logger.info("Endpoint %s is healthy: Latency %s, Status %s", endpoint, result["latency"], result["status_code"])
                     save_status(endpoint, result["status_code"], result["latency"])
                     span.add_event("Saved status")
             span.add_event("Sleeping until next poll")

@@ -1,6 +1,7 @@
 src/.env
 src/.venv
 src/status.db
+logs/
 status.db
 __pycache__/
 *.pyc

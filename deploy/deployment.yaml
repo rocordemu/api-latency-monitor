@@ -68,6 +68,11 @@ spec:
         volumeMounts:
         - name: db-storage
           mountPath: /app/data
+        - name: log-volume
+          mountPath: /app/logs
       volumes:
       - name: db-storage
         emptyDir: {}
+      - name: log-volume
+        persistentVolumeClaim:
+          claimName: log-pvc
