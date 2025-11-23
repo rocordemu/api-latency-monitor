@@ -122,7 +122,7 @@ async def poll_task():
                         logger.info("Endpoint %s is healthy: Latency %s, Status %s", endpoint, result["latency"], result["status_code"])
                     save_status(endpoint, result["status_code"], result["latency"])
                     span.add_event("Saved status")
-            span.add_event("Sleeping until next poll")
+            parent_span.add_event("Sleeping until next poll")
             await asyncio.sleep(POLL_INTERVAL)
 
 @app.on_event("startup")
