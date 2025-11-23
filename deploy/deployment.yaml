@@ -76,3 +76,17 @@ spec:
       - name: log-volume
         persistentVolumeClaim:
           claimName: log-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: log-pvc
+  namespace: monitoring-project
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi  # Must match the PV's size on storage.log-pv
+  storageClassName: ""  # Explicitly setting storageClassName to empty string
+  volumeName: log-pv-app-1  # Explicitly bind to the PV named "log-pv"
