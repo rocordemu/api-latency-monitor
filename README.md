@@ -26,6 +26,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 │   ├── cadvisor.yaml
 │   ├── configmap.yaml
 │   ├── deployment.yaml
+│   ├── grafana-loki.yaml
 │   ├── grafana.yaml
 │   ├── jaeger.yaml
 │   ├── otel-collector.yaml
@@ -35,6 +36,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 │   ├── prometheus.yaml
 │   ├── secret.yaml
 │   └── service.yaml
+│   └── storage.yaml
 └── src
     ├── app.py
     ├── poller.py
