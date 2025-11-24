@@ -2,9 +2,6 @@
 
 Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud applications, with Prometheus metrics and Grafana dashboards.
 
-## Architecture
-![Architecture](docs/architecture.md)
-
 ## Setup
 1. Clone the repo: `git clone https://github.com/rocordemu/api-latency-monitor.git`
 2. (Optional) Create a virtual environment: `python -m venv src/.venv` and activate it (`source src/.venv/bin/activate` on Linux/Mac, `src\.venv\Scripts\activate` on Windows).
