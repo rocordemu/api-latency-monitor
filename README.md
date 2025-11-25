@@ -1,6 +1,93 @@
 # API Latency Monitor
 
-Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud applications, with Prometheus metrics and Grafana dashboards.
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI Status](https://github.com/rocordemu/api-latency-monitor/actions/workflows/main.yml/badge.svg)](https://github.com/rocordemu/api-latency-monitor/actions)
+[![CI Status](https://github.com/rocordemu/api-latency-monitor/actions/workflows/python-app.yml/badge.svg)](https://github.com/rocordemu/api-latency-monitor/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/rocordemu/api-latency-monitor)](https://hub.docker.com/r/rocordemu/api-latency-monitor)
+
+A Python-based application for monitoring the latency and availability of `/appRunning` endpoints for three IBM Cloud applications. It polls the endpoints, records metrics, stores data in SQLite, exposes Prometheus metrics, and integrates with Grafana for visualization and alerting. The project is containerized with Docker and deployed on Kubernetes, with CI/CD workflows and optional Ansible automation for infrastructure setup.
+
+This project demonstrates SRE principles, including observability, alerting, tracing, and secure configuration management.
+
+## Features
+
+This application provides a comprehensive monitoring solution with the following key features, explained in detail:
+
+1. **API Polling and Latency Measurement**:
+   - The core functionality is handled by `poller.py`, which asynchronously polls the `/appRunning` endpoints of three IBM Cloud applications at a configurable interval (default: 60 seconds).
+   - Measures response latency using `time.time()` and handles errors (e.g., timeouts, non-200 status codes) gracefully.
+   - Records status codes and latency for each endpoint, classifying responses as "success" (200 OK) or "failure" (any other code).
+   - Feature benefit: Enables real-time detection of API performance issues, such as high latency or downtime.
+
+2. **Prometheus Metrics Exposure**:
+   - Uses `prometheus_client` to expose custom metrics: 
+     - `api_requests_total` (Counter): Total requests per endpoint, labeled by status ("success" or "failure").
+     - `api_latency_seconds` (Histogram): Response latency per endpoint, with buckets for percentile calculations (e.g., P95).
+     - `api_uptime_percent` (Gauge): Uptime percentage per endpoint (100 for success, 0 for failure).
+   - Metrics are served via a FastAPI-mounted endpoint at `/metrics`.
+   - Feature benefit: Allows seamless integration with Prometheus for time-series data collection, enabling alerting and visualization.
+
+3. **SQLite Data Persistence**:
+   - `storage.py` initializes a SQLite database (`status.db`) and saves polling results (endpoint, status code, latency, timestamp).
+   - Supports querying latest status via `/status` endpoint.
+   - Uses `os.makedirs` for directory creation and handles path differences for local vs. Kubernetes environments.
+   - Feature benefit: Provides persistent storage for historical analysis, surviving pod restarts (via `emptyDir` or PVC).
+
+4. **FastAPI Web Server**:
+   - `app.py` runs a FastAPI server on port 8000, with endpoints:
+     - `/health`: Returns {"status": "healthy"} for liveness probes.
+     - `/status`: Returns latest status from SQLite.
+     - `/metrics`: Prometheus metrics (mounted using `make_asgi_app`).
+   - Background polling task using asyncio.
+   - Feature benefit: Exposes a REST API for manual checks and integrates with Kubernetes probes for health management.
+
+5. **Kubernetes Deployment**:
+   - Manifests in `deploy/` for Deployment, Service, ConfigMap, Secret, and PersistentVolume.
+   - Supports namespace `monitoring-project`.
+   - Uses `hostNetwork` for cAdvisor DaemonSet to monitor container metrics.
+   - Feature benefit: Enables scalable, resilient deployment with auto-restarts and resource limits.
+
+6. **Monitoring Stack (Prometheus, Grafana, cAdvisor, Jaeger, Loki)**:
+   - Prometheus scrapes metrics and defines alert rules (e.g., high latency >1s, error rate >5%).
+   - Grafana for dashboards (latency P95, request rate, error rate) and alerts via Slack.
+   - cAdvisor DaemonSet for container CPU/memory metrics.
+   - Jaeger for tracing.
+   - Loki for logs.
+   - Feature benefit: Full observability with metrics, logs, traces, and alerts for proactive SRE.
+
+7. **Alerting with Slack Integration**:
+   - Alert rules in Prometheus trigger on high latency, error rate, or uptime <90%.
+   - Grafana sends notifications to Slack via webhook.
+   - Feature benefit: Immediate alerts for incidents, enabling fast response.
+
+8. **CI/CD Workflows**:
+   - GitHub Actions: `ci` builds and pushes Docker image on `src/**` changes.
+   - `Python Application` workflow runs tests and lint on pull requests.
+   - Feature benefit: Automates building, testing, and deployment for reliability.
+
+9. **Ansible Automation**:
+   - `infra.yaml` playbook applies Kubernetes manifests and creates secrets.
+   - Inventory in `inventory.ini` targets local Minikube.
+   - Feature benefit: One-command setup for infrastructure, ideal for reproducible environments.
+
+10. **Testing**:
+    - `test_poller.py` for unit tests using pytest.
+    - Feature benefit: Ensures polling logic is reliable.
+
+11. **Security & Configuration**:
+    - Secrets for API token and Slack webhook (created via `kubectl`, not committed).
+    - `.dockerignore` excludes sensitive files.
+    - Environment variables from `.env` for local dev.
+    - Feature benefit: Secure handling of credentials, no hardcoding.
+
+## Prerequisites
+
+- Python 3.8+ for local development.
+- Docker for building the image.
+- Minikube or a Kubernetes cluster for deployment.
+- GitHub account for CI/CD (optional).
+- IBM Cloud API token and endpoint URLs.
+- Slack webhook for alerts (optional).
 
 ## Setup
 1. Clone the repo: `git clone https://github.com/rocordemu/api-latency-monitor.git`
