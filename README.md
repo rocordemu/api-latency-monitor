@@ -63,7 +63,7 @@ Monitors latency and availability of `/appRunning` endpoints for three IBM Cloud
 - Note: `src/.env` and `src/.venv` are not included in the Docker image (excluded by `.dockerignore`).
 
 ## Kubernetes
-This application creates the namespace `monitoring-project` and produces Deployments, Pods, Services, Config Maps and Services.
+This application creates the namespace `monitoring-project` and produces Deployments, Pods, Services, Config Maps and Secrets.
 - Deployments
 ![Deployments](./screenshots/Kubernetes%20Deployments.png)
 - Pods
@@ -72,8 +72,8 @@ This application creates the namespace `monitoring-project` and produces Deploym
 ![Services](./screenshots/Kubernetes%20Services.png)
 - Config Maps
 ![ConfigMaps](./screenshots/Kubernetes%20Config%20Maps.png)
-- Services
-![Services](./screenshots/Kubernetes%20Services.png)
+- Secrets
+![Secrets](./screenshots/Kubernetes%20Secrets.png)
 
 ## Application Metrics
 The application generates the following metrics which then we will monitor them from Prometheus and Grafana.
