@@ -90,13 +90,41 @@ This application provides a comprehensive monitoring solution with the following
 - Slack webhook for alerts (optional).
 
 ## Setup
-1. Clone the repo: `git clone https://github.com/rocordemu/api-latency-monitor.git`
-2. (Optional) Create a virtual environment: `python -m venv src/.venv` and activate it (`source src/.venv/bin/activate` on Linux/Mac, `src\.venv\Scripts\activate` on Windows).
-3. Install dependencies: `pip install -r src/requirements.txt`
-4. Create `src/.env` from `src/.env.example` with your API token, URLs, and POLL_INTERVAL.
-5. Run locally: `python src/app.py`
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/rocordemu/api-latency-monitor.git
+   cd api-latency-monitor
+   ```
+2. (Optional) Create a virtual environment:
+```bash
+python -m venv src/.venv
+source src/.venv/bin/activate  # Linux/Mac
+# or src\.venv\Scripts\activate on Windows
+```
+3. Install dependencies:
+```bash
+pip install -r src/requirements.txt
+```
+4. Create `src/.env` based on 
+```bash
+API_URL_1=https://app1.example.com/appRunning
+API_URL_2=https://app2.example.com/appRunning
+API_URL_3=https://app3.example.com/appRunning
+API_TOKEN=your-ibm-token
+POLL_INTERVAL=60
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/your/webhook
+```
+5. Run locally:
+```bash
+python src/app.py
+```
+6. Access endpoints:
+- `http://localhost:8000/health`: Health check.
+- `http://localhost:8000/status`: Latest API status.
+- `http://localhost:8000/metrics`: Prometheus metrics.
 
 ## Project Structure
+The repository is structured for easy navigation, with source code, deployment manifests, and automation scripts separated:
 ```
 .
 ├── Dockerfile
@@ -131,20 +159,55 @@ This application provides a comprehensive monitoring solution with the following
 ```
 
 ## Deployment
-1. Start Minikube: `minikube start --driver=docker`
-2. Build Docker image: `docker build -t your-docker-repo/api-latency-monitor:latest .`
-   - Note: `.dockerignore` excludes `src/.env`, `src/.venv`, and other temporary files.
-3. Push image: `docker push your-docker-repo/api-latency-monitor:latest`
-4. Create Secret: `kubectl create secret generic api-token --from-literal=token=$(grep API_TOKEN src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
-5. Create Secret: `kubectl create secret generic slack-webhook --from-literal=token=$(grep SLACK_WEBHOOK_URL src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project`
-5. Apply manifests: `kubectl apply -f deploy/ -R`
-6. Access service: `minikube service api-latency-monitor -n monitoring-project`
+###Docker Containerization
+1. Build the image:
+```bash
+docker build -t your-docker-repo/api-latency-monitor:latest .
+```
+2. Push to your registry:
+```bash
+docker push your-docker-repo/api-latency-monitor:latest
+```
 
-    ### Ansible
-    - Run playbook: `ansible-playbook -i ansible_quickstart/inventory.ini ansible_quickstart/infra.yaml`
+###Kubernetes Deployment
+1. Start Minikube (if local):
+```bash
+minikube start --driver=docker
+```
+2. Create secrets (securely, without committing):
+```bash
+kubectl create secret generic api-token --from-literal=token=$(grep API_TOKEN src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project
+kubectl create secret generic slack-webhook --from-literal=token=$(grep SLACK_WEBHOOK_URL src/.env | cut -d '=' -f2 | tr -d ' \t\r\n') -n monitoring-project
+```
+3. Apply all manifests recursively:
+```bash
+kubectl apply -f deploy/ -R
+```
+4. Verify components:
+- Deployments: `kubectl get deployments -n monitoring-project`
+- Pods: `kubectl get pods -n monitoring-project`
+- Services: `kubectl get services -n monitoring-project`
+-ConfigMaps: `kubectl get configmaps -n monitoring-project`
+- Secrets: `kubectl get secrets -n monitoring-project`
+5. Access the app:
+```bash
+minikube service api-latency-monitor -n monitoring-project
+```
+
+    ### Ansible Automation
+For one-command deployment:
+1. Install Ansible (if not installed):
+```bash
+pip install ansible
+```
+2. Run playbook:
+```bash
+ansible-playbook -i ansible_quickstart/inventory.ini ansible_quickstart/infra.yaml
+```
+The playbook applies all Kubernetes manifests and creates secrets from `.env`, ensuring reproducible setup.
 
 ## Configuration
-- **Local**: Environment variables are loaded from `src/.env` using `python-dotenv`.
+- **Local Development**: Environment variables are loaded from `src/.env` using `dotenv`. This includes `API_URL_1/2/3` (endpoint URLs), `API_TOKEN` (IBM Cloud token), `POLL_INTERVAL` (polling frequency in seconds), and `SLACK_WEBHOOK_URL` (for alerts).
 - **Kubernetes**: Variables are injected from `deploy/configmap.yaml` (API_URL_1, API_URL_2, API_URL_3, POLL_INTERVAL) and `deploy/secret.yaml` (API_TOKEN, SLACK_WEBHOOK_URL).
 - `POLL_INTERVAL`: Polling frequency in seconds (default: 60).
 - Note: `src/.env` and `src/.venv` are not included in the Docker image (excluded by `.dockerignore`).
