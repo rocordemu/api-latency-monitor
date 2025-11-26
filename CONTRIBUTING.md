@@ -4,7 +4,7 @@ Thank you for considering contributing to the API Latency Monitor project! We we
 
 ## Code of Conduct
 
-This project adheres to the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainer at [your-email@example.com].
+This project adheres to the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainer at [btocm91@gmail.com](mailto:btocm91@gmail.com).
 
 ## How to Contribute
 
