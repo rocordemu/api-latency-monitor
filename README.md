@@ -128,6 +128,7 @@ This application provides a comprehensive monitoring solution with the following
 The repository is structured for easy navigation, with source code, deployment manifests, and automation scripts separated:
 ```
 .
+├── CONTRIBUTING.md
 ├── Dockerfile
 ├── LICENSE
 ├── README.md
@@ -188,7 +189,7 @@ The repository is structured for easy navigation, with source code, deployment m
 - Deployments: `kubectl get deployments -n monitoring-project`
 - Pods: `kubectl get pods -n monitoring-project`
 - Services: `kubectl get services -n monitoring-project`
--ConfigMaps: `kubectl get configmaps -n monitoring-project`
+- ConfigMaps: `kubectl get configmaps -n monitoring-project`
 - Secrets: `kubectl get secrets -n monitoring-project`
 5. Access the app:
     ```bash
